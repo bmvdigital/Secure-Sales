@@ -18,19 +18,18 @@ import {
   TrendingUp, 
   AlertTriangle, 
   Wallet,
-  Package,
   ArrowUpRight,
   ArrowDownRight,
   Target
 } from 'lucide-react';
-import { AppData, Category, Role } from '../types';
+import { AppData, Category } from '../types.ts';
 
 interface DashboardProps {
   data: AppData;
 }
 
 const COLORS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#6366f1'];
-const SALES_GOAL = 12000000; // Meta 12 Millones
+const SALES_GOAL = 12000000;
 
 const Dashboard: React.FC<DashboardProps> = ({ data }) => {
   const stats = useMemo(() => {
@@ -38,11 +37,8 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
     const netProfit = totalRevenue * 0.13; 
     const totalDebt = data.customers.reduce((acc, c) => acc + c.balance, 0);
     const criticalStock = data.inventory.filter(i => i.quantity < 500).length;
-
-    // Goal calculation
     const goalPercentage = Math.min((totalRevenue / SALES_GOAL) * 100, 100);
 
-    // Last 5 days trend
     const dayTrend = Array.from({ length: 5 }).map((_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (4 - i));
@@ -53,7 +49,6 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
       return { name: date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }), sales: daySales };
     });
 
-    // Zones Dinámicas
     const uniqueZones = Array.from(new Set(data.customers.map(c => c.zone)));
     const zoneData = uniqueZones.map(zone => ({
       name: zone,
@@ -62,13 +57,11 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         .reduce((acc, s) => acc + s.total, 0)
     })).filter(z => z.value > 0);
 
-    // Categories
     const categoryVolume = Object.values(Category).map(cat => ({
       name: cat,
       value: data.sales.flatMap(s => s.items).filter(item => data.products.find(p => p.id === item.productId)?.category === cat).reduce((acc, item) => acc + item.quantity, 0)
     })).sort((a, b) => b.value - a.value);
 
-    // Top Clients
     const topClients = data.customers
       .map(c => ({
         name: c.name,
@@ -95,7 +88,6 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Sales Goal Progress Bar */}
       <div className="bg-white p-10 rounded-[2.5rem] cyber-shadow overflow-hidden relative group">
         <div className="absolute top-0 right-0 p-8 text-blue-50/20 group-hover:text-blue-50/40 transition-colors">
           <Target size={120} strokeWidth={4} />
@@ -120,43 +112,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard 
-          title="Ingresos Totales" 
-          value={`$${stats.totalRevenue.toLocaleString()}`} 
-          icon={DollarSign} 
-          trend="+22.4%" 
-          positive={true} 
-          color="blue"
-        />
-        <KpiCard 
-          title="Utilidad Neta (Est.)" 
-          value={`$${stats.netProfit.toLocaleString()}`} 
-          icon={TrendingUp} 
-          trend="+14.2%" 
-          positive={true} 
-          color="cyan"
-        />
-        <KpiCard 
-          title="Cartera Activa" 
-          value={`$${stats.totalDebt.toLocaleString()}`} 
-          icon={Wallet} 
-          trend="+3.1%" 
-          positive={false} 
-          color="indigo"
-        />
-        <KpiCard 
-          title="Stock Crítico" 
-          value={stats.criticalStock} 
-          icon={AlertTriangle} 
-          trend={stats.criticalStock > 10 ? 'High Risk' : 'Healthy'} 
-          positive={stats.criticalStock < 10} 
-          color="amber"
-        />
+        <KpiCard title="Ingresos Totales" value={`$${stats.totalRevenue.toLocaleString()}`} icon={DollarSign} trend="+22.4%" positive={true} color="blue" />
+        <KpiCard title="Utilidad Neta (Est.)" value={`$${stats.netProfit.toLocaleString()}`} icon={TrendingUp} trend="+14.2%" positive={true} color="cyan" />
+        <KpiCard title="Cartera Activa" value={`$${stats.totalDebt.toLocaleString()}`} icon={Wallet} trend="+3.1%" positive={false} color="indigo" />
+        <KpiCard title="Stock Crítico" value={stats.criticalStock} icon={AlertTriangle} trend={stats.criticalStock > 10 ? 'High Risk' : 'Healthy'} positive={stats.criticalStock < 10} color="amber" />
       </div>
 
-      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <ChartContainer title="Comportamiento Diario (Últimos 5 Días)">
           <ResponsiveContainer width="100%" height={300}>
@@ -164,10 +126,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} dy={10} />
               <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}} />
-              <Tooltip 
-                cursor={{fill: '#f8fafc'}}
-                contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
-              />
+              <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}} />
               <Bar dataKey="sales" fill="#3b82f6" radius={[10, 10, 0, 0]} barSize={40} />
             </BarChart>
           </ResponsiveContainer>
@@ -176,15 +135,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         <ChartContainer title="Ventas por Zona (Impacto Feria)">
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie
-                data={stats.zoneData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={8}
-                dataKey="value"
-              >
+              <Pie data={stats.zoneData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={8} dataKey="value">
                 {stats.zoneData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
@@ -211,16 +162,11 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
           <div className="space-y-6">
             {stats.topClients.map((client, idx) => (
               <div key={idx} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-400">
-                  {idx + 1}
-                </div>
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-400">{idx + 1}</div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-slate-700">{client.name}</p>
                   <div className="w-full h-2 bg-slate-100 rounded-full mt-2">
-                    <div 
-                      className="h-full bg-blue-500 rounded-full" 
-                      style={{width: `${(client.total / stats.topClients[0].total) * 100}%`}} 
-                    />
+                    <div className="h-full bg-blue-500 rounded-full" style={{width: `${(client.total / (stats.topClients[0]?.total || 1)) * 100}%`}} />
                   </div>
                 </div>
                 <div className="text-right">
@@ -236,22 +182,13 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
 };
 
 const KpiCard = ({ title, value, icon: Icon, trend, positive, color }: any) => {
-  const colorMap: any = {
-    blue: 'bg-blue-600',
-    cyan: 'bg-cyan-500',
-    indigo: 'bg-indigo-600',
-    amber: 'bg-amber-500'
-  };
-  
+  const colorMap: any = { blue: 'bg-blue-600', cyan: 'bg-cyan-500', indigo: 'bg-indigo-600', amber: 'bg-amber-500' };
   return (
     <div className="bg-white p-8 rounded-[2.5rem] cyber-shadow group hover:-translate-y-1 transition-all duration-300">
       <div className="flex justify-between items-start mb-6">
-        <div className={`p-4 rounded-3xl ${colorMap[color]} text-white shadow-lg`}>
-          <Icon size={24} />
-        </div>
+        <div className={`p-4 rounded-3xl ${colorMap[color]} text-white shadow-lg`}><Icon size={24} /></div>
         <div className={`flex items-center gap-1 text-xs font-black uppercase ${positive ? 'text-emerald-500' : 'text-rose-500'}`}>
-          {positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-          {trend}
+          {positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} {trend}
         </div>
       </div>
       <div>

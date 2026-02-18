@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Role, 
   AppData, 
@@ -7,30 +7,26 @@ import {
   OrderStatus, 
   TransferStatus,
   PaymentMethod,
-  Category,
-  Customer,
   Sale,
   Order,
-  Transfer,
-  InventoryItem,
-  Product
-} from './types';
+  Transfer
+} from './types.ts';
 import { 
   INITIAL_PRODUCTS, 
   INITIAL_WAREHOUSES, 
   INITIAL_CUSTOMERS, 
   INITIAL_INVENTORY, 
   BASE_SALES 
-} from './constants';
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import Sales from './components/Sales';
-import Inventory from './components/Inventory';
-import Orders from './components/Orders';
-import Customers from './components/Customers';
-import Logistics from './components/Logistics';
-import AuditLog from './components/AuditLog';
-import Login from './components/Login';
+} from './constants.tsx';
+import Layout from './components/Layout.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import Sales from './components/Sales.tsx';
+import Inventory from './components/Inventory.tsx';
+import Orders from './components/Orders.tsx';
+import Customers from './components/Customers.tsx';
+import Logistics from './components/Logistics.tsx';
+import AuditLog from './components/AuditLog.tsx';
+import Login from './components/Login.tsx';
 
 const STORAGE_KEY = 'secure_sales_data';
 
@@ -47,7 +43,6 @@ const App: React.FC = () => {
     transfers: []
   });
 
-  // Persistency
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
@@ -60,25 +55,18 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
   }, []);
 
-  // Actions
   const handleAddSale = (sale: Sale) => {
     if (user?.role === Role.ADMIN) return;
-    
     const newData = { ...data };
     newData.sales = [sale, ...newData.sales];
-    
-    // Update inventory
     sale.items.forEach(item => {
       const invItem = newData.inventory.find(i => i.productId === item.productId && i.warehouseId === sale.warehouseId);
       if (invItem) invItem.quantity -= item.quantity;
     });
-
-    // Update customer balance if consignment
     if (sale.paymentMethod === PaymentMethod.CONSIGNACION) {
       const customer = newData.customers.find(c => c.id === sale.customerId);
       if (customer) customer.balance += sale.total;
     }
-
     saveData(newData);
   };
 
@@ -105,8 +93,6 @@ const App: React.FC = () => {
     const orderIdx = newData.orders.findIndex(o => o.id === orderId);
     if (orderIdx !== -1) {
       newData.orders[orderIdx].status = status;
-      // If completed, potentially create a sale? 
-      // For simplicity in MVP, we just change status.
       saveData(newData);
     }
   };
@@ -115,11 +101,8 @@ const App: React.FC = () => {
     if (user?.role === Role.ADMIN) return;
     const newData = { ...data };
     newData.transfers = [transfer, ...newData.transfers];
-    
-    // Debit origin warehouse
     const originInv = newData.inventory.find(i => i.productId === transfer.productId && i.warehouseId === transfer.originWarehouseId);
     if (originInv) originInv.quantity -= transfer.quantity;
-
     saveData(newData);
   };
 
@@ -129,17 +112,14 @@ const App: React.FC = () => {
     const transfer = newData.transfers.find(t => t.id === transferId);
     if (transfer && transfer.status === TransferStatus.EN_CAMINO) {
       transfer.status = TransferStatus.RECIBIDO;
-      
-      // Credit destination warehouse
       const destInv = newData.inventory.find(i => i.productId === transfer.productId && i.warehouseId === transfer.destinationWarehouseId);
       if (destInv) destInv.quantity += transfer.quantity;
-
       saveData(newData);
     }
   };
 
   const handleManualInventoryAdjustment = (productId: string, warehouseId: string, quantity: number) => {
-    if (user?.role !== Role.MASTER) return; // Only master can adjust manually
+    if (user?.role !== Role.MASTER) return;
     const newData = { ...data };
     const invItem = newData.inventory.find(i => i.productId === productId && i.warehouseId === warehouseId);
     if (invItem) {

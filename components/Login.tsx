@@ -31,7 +31,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     e.preventDefault();
     if (!password) return;
     
-    // En una app real aquí se validaría la contraseña contra el perfil seleccionado
     onLogin({ 
       id: `user-${role}-${Date.now()}`, 
       username: roleConfig[role].desc, 
@@ -45,19 +44,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-[2rem] lg:rounded-[3.5rem] shadow-2xl w-full max-w-4xl flex flex-col lg:flex-row overflow-hidden border-4 border-white">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-2 lg:p-4">
+      <div className="bg-white rounded-[2rem] lg:rounded-[3.5rem] shadow-2xl w-full max-w-4xl flex flex-col lg:flex-row overflow-hidden border-2 lg:border-4 border-white">
         
-        {/* Branding - Sidebar en desktop, Header en mobile */}
-        <div className="lg:w-5/12 bg-slate-900 p-8 lg:p-12 text-white flex flex-col justify-between relative overflow-hidden shrink-0">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-60 h-60 bg-blue-600/20 rounded-full blur-3xl"></div>
+        {/* Branding - Tamaño optimizado para mobile (aprox. 50% menos altura) */}
+        <div className="lg:w-5/12 bg-slate-900 p-5 lg:p-12 text-white flex flex-row lg:flex-col justify-between items-center lg:items-start relative overflow-hidden shrink-0">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl lg:w-60 lg:h-60 lg:-mr-16 lg:-mt-16"></div>
           
-          <div className="relative z-10">
-            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-blue-600 rounded-xl lg:rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/20">
-              <TrendingUp size={28} />
+          <div className="relative z-10 flex lg:block items-center gap-3 lg:gap-0">
+            <div className="w-10 h-10 lg:w-16 lg:h-16 bg-blue-600 rounded-xl lg:rounded-2xl flex items-center justify-center mb-0 lg:mb-6 shadow-xl shadow-blue-500/20">
+              <TrendingUp size={20} className="lg:hidden" />
+              <TrendingUp size={28} className="hidden lg:block" />
             </div>
-            <h1 className="text-3xl lg:text-5xl font-[900] tracking-tighter leading-none mb-2">SECURE<br/>SALES</h1>
-            <p className="text-slate-400 font-bold uppercase text-[9px] tracking-[0.3em]">FERIA 2026 EDITION</p>
+            <div>
+              <h1 className="text-xl lg:text-5xl font-[900] tracking-tighter leading-none lg:mb-2">SECURE<br className="hidden lg:block"/> SALES</h1>
+              <p className="text-slate-400 font-bold uppercase text-[7px] lg:text-[9px] tracking-[0.3em]">FERIA 2026</p>
+            </div>
           </div>
 
           <div className="relative z-10 hidden lg:block space-y-6">
@@ -68,16 +70,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </div>
 
-        {/* Form Container */}
-        <div className="lg:w-7/12 p-8 lg:p-14 bg-white">
-          <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-10">
-            <div className="space-y-2">
-              <h2 className="text-2xl lg:text-3xl font-[900] text-slate-900 tracking-tight">Acceso Operativo</h2>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Seleccione perfil e ingrese contraseña</p>
+        {/* Form Container - Espaciado más denso para evitar scroll */}
+        <div className="lg:w-7/12 p-5 lg:p-14 bg-white">
+          <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-10">
+            <div className="space-y-1">
+              <h2 className="text-xl lg:text-3xl font-[900] text-slate-900 tracking-tight">Acceso Operativo</h2>
+              <p className="text-slate-400 text-[8px] lg:text-xs font-bold uppercase tracking-widest">Seleccione perfil e ingrese clave</p>
             </div>
 
-            {/* Selector de Perfil */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Selector de Perfil - Más compacto en mobile */}
+            <div className="grid grid-cols-2 gap-2 lg:gap-3">
               {(Object.keys(roleConfig) as Role[]).map((r) => {
                 const Config = roleConfig[r];
                 const Icon = Config.icon;
@@ -86,18 +88,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
-                    className={`p-4 lg:p-5 rounded-3xl border-2 text-left transition-all duration-300 relative ${
+                    className={`p-3 lg:p-5 rounded-2xl lg:rounded-3xl border-2 text-left transition-all duration-300 relative ${
                       role === r 
-                      ? 'border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50' 
+                      ? 'border-blue-600 bg-blue-50/50 shadow-md ring-2 lg:ring-4 ring-blue-50' 
                       : 'border-slate-50 bg-slate-50/50 hover:border-slate-200'
                     }`}
                   >
-                    <div className={`${Config.bg} ${Config.color} w-9 h-9 rounded-xl flex items-center justify-center mb-3`}>
-                      <Icon size={18} />
+                    <div className={`${Config.bg} ${Config.color} w-7 h-7 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl flex items-center justify-center mb-1.5 lg:mb-3`}>
+                      <Icon size={14} className="lg:hidden" />
+                      <Icon size={18} className="hidden lg:block" />
                     </div>
-                    <p className={`font-black text-[11px] uppercase tracking-tighter ${role === r ? 'text-blue-600' : 'text-slate-700'}`}>{Config.desc}</p>
+                    <p className={`font-black text-[9px] lg:text-[11px] uppercase tracking-tighter ${role === r ? 'text-blue-600' : 'text-slate-700'}`}>{Config.desc}</p>
                     {role === r && (
-                      <div className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full shadow-lg shadow-blue-400"></div>
+                      <div className="absolute top-3 right-3 lg:top-4 lg:right-4 w-1.5 h-1.5 lg:w-2 lg:h-2 bg-blue-600 rounded-full"></div>
                     )}
                   </button>
                 );
@@ -105,15 +108,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             {/* Campo de Contraseña Único */}
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               <div className="relative group">
-                <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${password ? 'text-blue-600' : 'text-slate-300'}`} size={20} />
+                <Lock className={`absolute left-4 lg:left-5 top-1/2 -translate-y-1/2 transition-colors ${password ? 'text-blue-600' : 'text-slate-300'}`} size={16} />
                 <input 
                   type="password" 
                   placeholder={`Contraseña de ${roleConfig[role].desc}`} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 pl-14 pr-6 py-5 rounded-2xl border border-slate-100 font-bold text-base focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full bg-slate-50 pl-11 lg:pl-14 pr-6 py-3.5 lg:py-5 rounded-xl lg:rounded-2xl border border-slate-100 font-bold text-sm lg:text-base focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 outline-none transition-all placeholder:text-slate-300"
                 />
               </div>
             </div>
@@ -121,19 +124,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <button 
               type="submit"
               disabled={!password}
-              className="w-full py-5 lg:py-6 bg-slate-900 hover:bg-black disabled:bg-slate-200 text-white rounded-3xl font-black shadow-2xl shadow-slate-200 transition-all flex items-center justify-center gap-3 text-sm tracking-[0.2em] uppercase active:scale-[0.98]"
+              className="w-full py-4 lg:py-6 bg-slate-900 hover:bg-black disabled:bg-slate-200 text-white rounded-2xl lg:rounded-3xl font-black shadow-lg lg:shadow-2xl shadow-slate-200 transition-all flex items-center justify-center gap-2 lg:gap-3 text-xs tracking-[0.2em] uppercase active:scale-[0.98]"
             >
               INGRESAR AL PANEL
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
 
             {/* Quick Access para Demo */}
-            <div className="pt-6 border-t border-slate-50">
-               <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-3">Accesos Rápidos (Demo)</p>
-               <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => quickAccess(Role.OPERATOR)} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Vendedor</button>
-                  <button type="button" onClick={() => quickAccess(Role.ADMIN)} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Auditor</button>
-                  <button type="button" onClick={() => quickAccess(Role.MASTER)} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Master</button>
+            <div className="pt-4 lg:pt-6 border-t border-slate-50">
+               <p className="text-[7px] lg:text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2 lg:mb-3">Demo Directa</p>
+               <div className="flex flex-wrap gap-1.5">
+                  <button type="button" onClick={() => quickAccess(Role.OPERATOR)} className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-[8px] lg:text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Ventas</button>
+                  <button type="button" onClick={() => quickAccess(Role.ADMIN)} className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-[8px] lg:text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Auditor</button>
+                  <button type="button" onClick={() => quickAccess(Role.MASTER)} className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-[8px] lg:text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Master</button>
                </div>
             </div>
           </form>

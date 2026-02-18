@@ -1,7 +1,23 @@
 
-import React, { useState } from 'react';
-import { Users, Search, QrCode, DollarSign, ChevronRight, UserPlus, MapPin, Wallet, Mail, Phone, Briefcase, UserCheck } from 'lucide-react';
-import { AppData, User, Role, Customer } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Users, 
+  Search, 
+  QrCode, 
+  DollarSign, 
+  ChevronRight, 
+  UserPlus, 
+  MapPin, 
+  Wallet, 
+  Mail, 
+  Phone, 
+  Briefcase, 
+  UserCheck,
+  Download,
+  X,
+  Printer
+} from 'lucide-react';
+import { AppData, User, Role, Customer } from '../types.ts';
 
 interface CustomersProps {
   data: AppData;
@@ -12,7 +28,9 @@ interface CustomersProps {
 const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) => {
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [qrModalCustomer, setQrModalCustomer] = useState<Customer | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const qrContainerRef = useRef<HTMLDivElement>(null);
 
   const filtered = data.customers.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -31,8 +49,75 @@ const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) =>
     alert('Abono registrado con éxito');
   };
 
-  const generateQR = (customer: Customer) => {
-    alert(`Generando Código QR para: ${customer.name}\nZona: ${customer.zone}`);
+  // Generación de QR cuando el modal se abre
+  useEffect(() => {
+    if (qrModalCustomer && qrContainerRef.current) {
+      qrContainerRef.current.innerHTML = '';
+      const qrData = JSON.stringify({
+        id: qrModalCustomer.id,
+        name: qrModalCustomer.name,
+        zone: qrModalCustomer.zone
+      });
+      
+      // @ts-ignore
+      new window.QRCode(qrContainerRef.current, {
+        text: qrData,
+        width: 200,
+        height: 200,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: 1 // QRCodelib.Level.H
+      });
+    }
+  }, [qrModalCustomer]);
+
+  const downloadPDF = async () => {
+    if (!qrModalCustomer || !qrContainerRef.current) return;
+
+    // Obtener la imagen del QR generado
+    const qrImage = qrContainerRef.current.querySelector('img')?.src;
+    if (!qrImage) return;
+
+    // @ts-ignore
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [100, 150] // Formato tarjeta/badge
+    });
+
+    // Fondo y diseño
+    doc.setFillColor(15, 23, 42); // Slate 900
+    doc.roundedRect(5, 5, 90, 140, 5, 5, 'F');
+    
+    // Header
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("SECURE SALES", 15, 20);
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text("FERIA TABASCO 2026", 15, 25);
+    
+    // QR Area White Background
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(15, 35, 70, 70, 3, 3, 'F');
+    doc.addImage(qrImage, 'PNG', 20, 40, 60, 60);
+
+    // Customer Info
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(qrModalCustomer.name.toUpperCase(), 15, 115, { maxWidth: 70 });
+    
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(148, 163, 184); // Slate 400
+    doc.text(`ZONA: ${qrModalCustomer.zone}`, 15, 125);
+    doc.text(`ENCARGADO: ${qrModalCustomer.manager}`, 15, 130);
+    doc.text(`ID: ${qrModalCustomer.id}`, 15, 135);
+
+    doc.save(`Credencial_${qrModalCustomer.name.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
@@ -121,7 +206,7 @@ const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) =>
                 Registrar Abono
               </button>
               <button 
-                onClick={() => generateQR(customer)}
+                onClick={() => setQrModalCustomer(customer)}
                 className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all"
               >
                 <QrCode size={20} />
@@ -131,13 +216,14 @@ const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) =>
         ))}
       </div>
 
+      {/* Modal de Abono */}
       {selectedCustomer && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="p-8 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-black text-slate-900">Aplicar Pago</h3>
-                <button onClick={() => setSelectedCustomer(null)} className="text-slate-400">×</button>
+                <button onClick={() => setSelectedCustomer(null)} className="text-slate-400"><X /></button>
               </div>
               <p className="text-slate-400 font-medium italic">Abonando a cuenta de: <span className="text-slate-900 font-bold not-italic">{selectedCustomer.tradeName}</span></p>
               
@@ -167,6 +253,76 @@ const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) =>
                 CONFIRMAR ABONO
                 <ChevronRight />
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Código QR / Credencial */}
+      {qrModalCustomer && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[3.5rem] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 shadow-2xl">
+            <div className="p-10 flex flex-col items-center">
+              <div className="flex justify-between w-full mb-8 items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                    <QrCode size={18} />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Credencial Digital</h3>
+                </div>
+                <button onClick={() => setQrModalCustomer(null)} className="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+                  <X size={20} className="text-slate-500" />
+                </button>
+              </div>
+
+              {/* Simulación visual de la credencial */}
+              <div className="w-full bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group mb-8">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all"></div>
+                 
+                 <div className="flex justify-between items-start mb-8 relative z-10">
+                    <div>
+                      <p className="text-[10px] font-black tracking-widest text-blue-400 uppercase">Secure Sales</p>
+                      <p className="text-xs font-bold text-slate-400">FERIA TABASCO 2026</p>
+                    </div>
+                    <Printer size={16} className="text-slate-600" />
+                 </div>
+
+                 <div className="flex flex-col items-center justify-center mb-8 relative z-10">
+                    <div className="bg-white p-4 rounded-3xl shadow-2xl">
+                       <div ref={qrContainerRef} className="rounded-xl overflow-hidden"></div>
+                    </div>
+                    <p className="mt-4 text-[10px] font-black tracking-[0.3em] text-slate-500">ID: {qrModalCustomer.id}</p>
+                 </div>
+
+                 <div className="relative z-10">
+                    <h4 className="text-2xl font-black mb-1 truncate">{qrModalCustomer.name}</h4>
+                    <div className="flex gap-6 mt-4">
+                       <div>
+                         <p className="text-[8px] font-black text-slate-500 uppercase">Zona Operativa</p>
+                         <p className="text-xs font-bold text-blue-400 uppercase">{qrModalCustomer.zone}</p>
+                       </div>
+                       <div>
+                         <p className="text-[8px] font-black text-slate-500 uppercase">Encargado</p>
+                         <p className="text-xs font-bold text-slate-300 uppercase">{qrModalCustomer.manager}</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 w-full">
+                <button 
+                  onClick={() => setQrModalCustomer(null)}
+                  className="py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase transition-all"
+                >
+                  Cerrar
+                </button>
+                <button 
+                  onClick={downloadPDF}
+                  className="py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-100"
+                >
+                  <Download size={16} /> Descargar PDF
+                </button>
+              </div>
             </div>
           </div>
         </div>

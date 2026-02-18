@@ -5,12 +5,10 @@ import {
   ChevronRight, 
   TrendingUp, 
   Lock, 
-  User as UserIcon, 
   Crown, 
   Eye, 
   Zap, 
-  Megaphone,
-  Info
+  Megaphone
 } from 'lucide-react';
 import { Role, User } from '../types.ts';
 
@@ -19,7 +17,6 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<Role>(Role.MASTER);
 
@@ -32,12 +29,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) return;
-    onLogin({ id: `user-${Date.now()}`, username, role });
+    if (!password) return;
+    
+    // En una app real aquí se validaría la contraseña contra el perfil seleccionado
+    onLogin({ 
+      id: `user-${role}-${Date.now()}`, 
+      username: roleConfig[role].desc, 
+      role 
+    });
   };
 
-  const quickAccess = (u: string, r: Role) => {
-    setUsername(u);
+  const quickAccess = (r: Role) => {
     setPassword('demo123');
     setRole(r);
   };
@@ -47,7 +49,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="bg-white rounded-[2rem] lg:rounded-[3.5rem] shadow-2xl w-full max-w-4xl flex flex-col lg:flex-row overflow-hidden border-4 border-white">
         
         {/* Branding - Sidebar en desktop, Header en mobile */}
-        <div className="lg:w-5/12 bg-slate-900 p-8 lg:p-12 text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:w-5/12 bg-slate-900 p-8 lg:p-12 text-white flex flex-col justify-between relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-60 h-60 bg-blue-600/20 rounded-full blur-3xl"></div>
           
           <div className="relative z-10">
@@ -67,14 +69,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
 
         {/* Form Container */}
-        <div className="lg:w-7/12 p-8 lg:p-14">
-          <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
-            <div className="space-y-1">
+        <div className="lg:w-7/12 p-8 lg:p-14 bg-white">
+          <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-10">
+            <div className="space-y-2">
               <h2 className="text-2xl lg:text-3xl font-[900] text-slate-900 tracking-tight">Acceso Operativo</h2>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Seleccione perfil</p>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Seleccione perfil e ingrese contraseña</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 lg:gap-3">
+            {/* Selector de Perfil */}
+            <div className="grid grid-cols-2 gap-3">
               {(Object.keys(roleConfig) as Role[]).map((r) => {
                 const Config = roleConfig[r];
                 const Icon = Config.icon;
@@ -83,57 +86,54 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     key={r}
                     type="button"
                     onClick={() => setRole(r)}
-                    className={`p-3 lg:p-4 rounded-2xl border-2 text-left transition-all duration-300 relative ${
+                    className={`p-4 lg:p-5 rounded-3xl border-2 text-left transition-all duration-300 relative ${
                       role === r 
-                      ? 'border-blue-600 bg-blue-50/50 shadow-md' 
+                      ? 'border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50' 
                       : 'border-slate-50 bg-slate-50/50 hover:border-slate-200'
                     }`}
                   >
-                    <div className={`${Config.bg} ${Config.color} w-8 h-8 rounded-lg flex items-center justify-center mb-2`}>
-                      <Icon size={14} />
+                    <div className={`${Config.bg} ${Config.color} w-9 h-9 rounded-xl flex items-center justify-center mb-3`}>
+                      <Icon size={18} />
                     </div>
-                    <p className={`font-black text-[10px] uppercase tracking-tighter ${role === r ? 'text-blue-600' : 'text-slate-700'}`}>{Config.desc}</p>
+                    <p className={`font-black text-[11px] uppercase tracking-tighter ${role === r ? 'text-blue-600' : 'text-slate-700'}`}>{Config.desc}</p>
+                    {role === r && (
+                      <div className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full shadow-lg shadow-blue-400"></div>
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            <div className="space-y-3">
-              <div className="relative">
-                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="ID de Usuario" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-slate-50 pl-12 pr-4 py-4 rounded-xl border border-slate-100 font-bold text-sm focus:bg-white transition-all"
-                />
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            {/* Campo de Contraseña Único */}
+            <div className="space-y-4">
+              <div className="relative group">
+                <Lock className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${password ? 'text-blue-600' : 'text-slate-300'}`} size={20} />
                 <input 
                   type="password" 
-                  placeholder="Password" 
+                  placeholder={`Contraseña de ${roleConfig[role].desc}`} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 pl-12 pr-4 py-4 rounded-xl border border-slate-100 font-bold text-sm focus:bg-white transition-all"
+                  className="w-full bg-slate-50 pl-14 pr-6 py-5 rounded-2xl border border-slate-100 font-bold text-base focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 outline-none transition-all placeholder:text-slate-300"
                 />
               </div>
             </div>
 
             <button 
               type="submit"
-              className="w-full py-4 lg:py-5 bg-slate-900 hover:bg-black text-white rounded-2xl font-black shadow-xl transition-all flex items-center justify-center gap-3 text-xs tracking-widest uppercase"
+              disabled={!password}
+              className="w-full py-5 lg:py-6 bg-slate-900 hover:bg-black disabled:bg-slate-200 text-white rounded-3xl font-black shadow-2xl shadow-slate-200 transition-all flex items-center justify-center gap-3 text-sm tracking-[0.2em] uppercase active:scale-[0.98]"
             >
               INGRESAR AL PANEL
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
 
-            <div className="pt-4 border-t border-slate-50">
+            {/* Quick Access para Demo */}
+            <div className="pt-6 border-t border-slate-50">
+               <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-3">Accesos Rápidos (Demo)</p>
                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => quickAccess('Vendedor', Role.OPERATOR)} className="px-3 py-1.5 bg-slate-50 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-tighter">Venta Rápida</button>
-                  <button type="button" onClick={() => quickAccess('Auditor', Role.ADMIN)} className="px-3 py-1.5 bg-slate-50 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-tighter">Modo Auditor</button>
-                  <button type="button" onClick={() => quickAccess('Master', Role.MASTER)} className="px-3 py-1.5 bg-slate-50 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-tighter">Master</button>
+                  <button type="button" onClick={() => quickAccess(Role.OPERATOR)} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Vendedor</button>
+                  <button type="button" onClick={() => quickAccess(Role.ADMIN)} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Auditor</button>
+                  <button type="button" onClick={() => quickAccess(Role.MASTER)} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-tighter transition-colors">Master</button>
                </div>
             </div>
           </form>

@@ -107,7 +107,7 @@ const Dashboard: React.FC<DashboardProps> = ({ data }) => {
         </div>
         <div className="relative z-10 flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Meta de Ventas Anual</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Meta de Ventas en Feria Tabasco 2026</span>
             <span className="text-xs font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">{stats.goalPercentage.toFixed(1)}%</span>
           </div>
           <div className="w-full h-2.5 bg-slate-50 rounded-full border border-slate-100">

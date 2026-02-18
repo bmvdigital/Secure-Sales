@@ -33,7 +33,7 @@ const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) =>
   const qrContainerRef = useRef<HTMLDivElement>(null);
 
   const filtered = data.customers.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
+    c.tradeName.toLowerCase().includes(search.toLowerCase()) || 
     c.manager.toLowerCase().includes(search.toLowerCase()) ||
     c.zone.toLowerCase().includes(search.toLowerCase())
   );
@@ -49,280 +49,198 @@ const Customers: React.FC<CustomersProps> = ({ data, user, onUpdateBalance }) =>
     alert('Abono registrado con éxito');
   };
 
-  // Generación de QR cuando el modal se abre
   useEffect(() => {
     if (qrModalCustomer && qrContainerRef.current) {
       qrContainerRef.current.innerHTML = '';
       const qrData = JSON.stringify({
         id: qrModalCustomer.id,
-        name: qrModalCustomer.name,
+        name: qrModalCustomer.tradeName,
         zone: qrModalCustomer.zone
       });
       
       // @ts-ignore
       new window.QRCode(qrContainerRef.current, {
         text: qrData,
-        width: 200,
-        height: 200,
+        width: 180,
+        height: 180,
         colorDark: "#0f172a",
         colorLight: "#ffffff",
-        correctLevel: 1 // QRCodelib.Level.H
+        correctLevel: 1 
       });
     }
   }, [qrModalCustomer]);
 
   const downloadPDF = async () => {
     if (!qrModalCustomer || !qrContainerRef.current) return;
-
-    // Obtener la imagen del QR generado
     const qrImage = qrContainerRef.current.querySelector('img')?.src;
     if (!qrImage) return;
 
     // @ts-ignore
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [100, 150] // Formato tarjeta/badge
-    });
-
-    // Fondo y diseño
-    doc.setFillColor(15, 23, 42); // Slate 900
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [100, 150] });
+    doc.setFillColor(15, 23, 42); 
     doc.roundedRect(5, 5, 90, 140, 5, 5, 'F');
-    
-    // Header
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
     doc.text("SECURE SALES", 15, 20);
     doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
     doc.text("FERIA TABASCO 2026", 15, 25);
-    
-    // QR Area White Background
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(15, 35, 70, 70, 3, 3, 'F');
     doc.addImage(qrImage, 'PNG', 20, 40, 60, 60);
-
-    // Customer Info
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text(qrModalCustomer.name.toUpperCase(), 15, 115, { maxWidth: 70 });
-    
+    doc.setFontSize(11);
+    doc.text(qrModalCustomer.tradeName.toUpperCase(), 15, 115, { maxWidth: 70 });
     doc.setFontSize(8);
     doc.setFont(undefined, 'normal');
-    doc.setTextColor(148, 163, 184); // Slate 400
+    doc.setTextColor(148, 163, 184);
     doc.text(`ZONA: ${qrModalCustomer.zone}`, 15, 125);
     doc.text(`ENCARGADO: ${qrModalCustomer.manager}`, 15, 130);
-    doc.text(`ID: ${qrModalCustomer.id}`, 15, 135);
-
-    doc.save(`Credencial_${qrModalCustomer.name.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`Credencial_${qrModalCustomer.tradeName.replace(/\s+/g, '_')}.pdf`);
   };
 
   return (
-    <div className="space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-4 lg:space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h2 className="text-4xl font-[900] text-slate-900 tracking-tight">BASE DE CLIENTES</h2>
-          <p className="text-slate-400 font-semibold mt-1 uppercase text-xs tracking-[0.2em]">Feria Tabasco 2026 - Control de Concesiones</p>
+          <h2 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">Comercios</h2>
+          <p className="text-slate-400 font-bold uppercase text-[9px] tracking-widest mt-1">Directorio de Concesiones 2026</p>
         </div>
-        <button className="bg-blue-600 text-white px-8 py-4 rounded-[1.5rem] font-black flex items-center gap-3 shadow-xl shadow-blue-100 hover:scale-105 transition-all">
-          <UserPlus size={20} /> ALTA DE COMERCIO
+        <button className="w-full md:w-auto bg-blue-600 text-white px-5 py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-100 uppercase tracking-widest active:scale-95 transition-all">
+          <UserPlus size={16} /> Alta Comercio
         </button>
       </div>
 
       <div className="relative">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
         <input 
           type="text" 
-          placeholder="Buscar por comercio, encargado o zona operativa..." 
+          placeholder="Buscar comercio..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-white pl-16 pr-6 py-6 rounded-3xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all font-semibold"
+          className="w-full bg-white pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 font-bold text-xs outline-none transition-all"
         />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 pb-20 lg:pb-0">
         {filtered.map(customer => (
-          <div key={customer.id} className="bg-white p-8 rounded-[2.5rem] cyber-shadow flex flex-col gap-6 group transition-all duration-300 hover:border-blue-200 border border-transparent">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                  <Briefcase size={32} />
+          <div key={customer.id} className="bg-white p-4 lg:p-6 rounded-[1.5rem] lg:rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+                  <Briefcase size={20} />
                 </div>
-                <div>
-                  <h4 className="text-xl font-black text-slate-800 leading-tight">{customer.tradeName}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <MapPin size={12} className="text-slate-400" />
-                    <span className="text-xs font-black text-blue-500 uppercase tracking-widest">{customer.zone}</span>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-black text-slate-800 leading-tight truncate uppercase">{customer.tradeName}</h4>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <MapPin size={10} className="text-blue-500" />
+                    <span className="text-[9px] font-black text-blue-500 uppercase tracking-tighter truncate">{customer.zone}</span>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Saldo Actual</p>
-                <p className={`text-2xl font-[900] ${customer.balance > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+              <div className="text-right shrink-0">
+                <p className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Saldo</p>
+                <p className={`text-sm lg:text-base font-black ${customer.balance > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
                   ${customer.balance.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-              <div className="flex items-center gap-3">
-                <UserCheck size={16} className="text-slate-400" />
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase">Encargado</p>
-                  <p className="text-xs font-bold text-slate-700 uppercase">{customer.manager}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-y-2 gap-x-3 pt-3 border-t border-slate-50">
+              <div className="flex items-center gap-2 min-w-0">
+                <UserCheck size={12} className="text-slate-400 shrink-0" />
+                <p className="text-[10px] font-bold text-slate-600 truncate uppercase">{customer.manager}</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Briefcase size={16} className="text-slate-400" />
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase">Giro</p>
-                  <p className="text-xs font-bold text-slate-700">{customer.businessLine}</p>
-                </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <Phone size={12} className="text-slate-400 shrink-0" />
+                <p className="text-[10px] font-bold text-slate-600 truncate">{customer.phone}</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Mail size={16} className="text-slate-400" />
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase">Contacto</p>
-                  <p className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{customer.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone size={16} className="text-slate-400" />
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase">Teléfono</p>
-                  <p className="text-xs font-bold text-slate-700">{customer.phone}</p>
-                </div>
+              <div className="flex items-center gap-2 min-w-0 col-span-2">
+                <Mail size={12} className="text-slate-400 shrink-0" />
+                <p className="text-[10px] font-bold text-slate-600 truncate">{customer.email}</p>
               </div>
             </div>
 
-            <div className="flex gap-3 mt-2">
+            <div className="flex gap-2 pt-1">
               <button 
                 onClick={() => setSelectedCustomer(customer)}
-                className="flex-1 py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
+                className="flex-1 py-3 bg-slate-900 hover:bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all"
               >
-                Registrar Abono
+                Abonar
               </button>
               <button 
                 onClick={() => setQrModalCustomer(customer)}
-                className="p-4 bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white rounded-2xl transition-all"
+                className="px-4 py-3 bg-slate-100 text-slate-500 hover:bg-blue-600 hover:text-white rounded-xl active:scale-95 transition-all"
               >
-                <QrCode size={20} />
+                <QrCode size={16} />
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal de Abono */}
+      {/* Modales Optimizados */}
       {selectedCustomer && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="p-8 space-y-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-black text-slate-900">Aplicar Pago</h3>
-                <button onClick={() => setSelectedCustomer(null)} className="text-slate-400"><X /></button>
+                <h3 className="text-lg font-black text-slate-900 uppercase">Abonar a Cuenta</h3>
+                <button onClick={() => setSelectedCustomer(null)} className="text-slate-400 p-2"><X size={20}/></button>
               </div>
-              <p className="text-slate-400 font-medium italic">Abonando a cuenta de: <span className="text-slate-900 font-bold not-italic">{selectedCustomer.tradeName}</span></p>
-              
-              <div className="bg-slate-50 p-6 rounded-2xl flex justify-between items-center border border-slate-100">
-                <span className="text-slate-500 font-bold">Deuda Pendiente</span>
-                <span className="text-2xl font-black text-rose-500">${selectedCustomer.balance.toLocaleString()}</span>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Pendiente</p>
+                <p className="text-xl font-black text-rose-500">${selectedCustomer.balance.toLocaleString()}</p>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Monto del Depósito</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
-                  <input 
-                    type="number" 
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full bg-slate-50 pl-10 pr-6 py-4 rounded-2xl border border-slate-100 font-black text-xl focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Monto Depósito</label>
+                <input 
+                  type="number" 
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-slate-50 px-4 py-3.5 rounded-xl border border-slate-100 font-black text-lg focus:bg-white outline-none transition-all"
+                />
               </div>
-
-              <button 
-                onClick={handlePayment}
-                className="w-full py-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-4 mt-4"
-              >
-                CONFIRMAR ABONO
-                <ChevronRight />
+              <button onClick={handlePayment} className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-50 mt-2">
+                Confirmar Pago
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Código QR / Credencial */}
       {qrModalCustomer && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-6">
-          <div className="bg-white rounded-[3.5rem] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500 shadow-2xl">
-            <div className="p-10 flex flex-col items-center">
-              <div className="flex justify-between w-full mb-8 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                    <QrCode size={18} />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Credencial Digital</h3>
-                </div>
-                <button onClick={() => setQrModalCustomer(null)} className="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
-                  <X size={20} className="text-slate-500" />
-                </button>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-3">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="p-6 flex flex-col items-center">
+              <div className="flex justify-between w-full mb-4 items-center">
+                <h3 className="text-sm font-black text-slate-900 uppercase">Credencial Digital</h3>
+                <button onClick={() => setQrModalCustomer(null)} className="p-2 bg-slate-100 rounded-full"><X size={16}/></button>
               </div>
-
-              {/* Simulación visual de la credencial */}
-              <div className="w-full bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group mb-8">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all"></div>
-                 
-                 <div className="flex justify-between items-start mb-8 relative z-10">
+              <div className="w-full bg-slate-900 rounded-[1.5rem] p-5 text-white mb-6">
+                 <div className="flex flex-col items-center justify-center mb-5">
+                    <div className="bg-white p-3 rounded-2xl">
+                       <div ref={qrContainerRef}></div>
+                    </div>
+                    <p className="mt-3 text-[9px] font-black text-slate-500 uppercase tracking-widest">ID: {qrModalCustomer.id}</p>
+                 </div>
+                 <h4 className="text-base font-black truncate text-center mb-3">{qrModalCustomer.tradeName}</h4>
+                 <div className="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
                     <div>
-                      <p className="text-[10px] font-black tracking-widest text-blue-400 uppercase">Secure Sales</p>
-                      <p className="text-xs font-bold text-slate-400">FERIA TABASCO 2026</p>
+                      <p className="text-[8px] font-black text-slate-500 uppercase">Zona</p>
+                      <p className="text-[10px] font-bold text-blue-400 truncate">{qrModalCustomer.zone}</p>
                     </div>
-                    <Printer size={16} className="text-slate-600" />
-                 </div>
-
-                 <div className="flex flex-col items-center justify-center mb-8 relative z-10">
-                    <div className="bg-white p-4 rounded-3xl shadow-2xl">
-                       <div ref={qrContainerRef} className="rounded-xl overflow-hidden"></div>
-                    </div>
-                    <p className="mt-4 text-[10px] font-black tracking-[0.3em] text-slate-500">ID: {qrModalCustomer.id}</p>
-                 </div>
-
-                 <div className="relative z-10">
-                    <h4 className="text-2xl font-black mb-1 truncate">{qrModalCustomer.name}</h4>
-                    <div className="flex gap-6 mt-4">
-                       <div>
-                         <p className="text-[8px] font-black text-slate-500 uppercase">Zona Operativa</p>
-                         <p className="text-xs font-bold text-blue-400 uppercase">{qrModalCustomer.zone}</p>
-                       </div>
-                       <div>
-                         <p className="text-[8px] font-black text-slate-500 uppercase">Encargado</p>
-                         <p className="text-xs font-bold text-slate-300 uppercase">{qrModalCustomer.manager}</p>
-                       </div>
+                    <div>
+                      <p className="text-[8px] font-black text-slate-500 uppercase">Encargado</p>
+                      <p className="text-[10px] font-bold text-slate-300 truncate">{qrModalCustomer.manager}</p>
                     </div>
                  </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <button 
-                  onClick={() => setQrModalCustomer(null)}
-                  className="py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase transition-all"
-                >
-                  Cerrar
-                </button>
-                <button 
-                  onClick={downloadPDF}
-                  className="py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-xs uppercase transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-100"
-                >
-                  <Download size={16} /> Descargar PDF
-                </button>
-              </div>
+              <button onClick={downloadPDF} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+                <Download size={16} /> PDF Imprimible
+              </button>
             </div>
           </div>
         </div>

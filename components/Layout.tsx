@@ -70,85 +70,80 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, currentView, setView, c
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40
         bg-white border-r border-slate-100 transition-all duration-300 ease-in-out flex flex-col
-        ${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 lg:w-20 -translate-x-full lg:translate-x-0'}
+        ${sidebarOpen ? 'w-64 translate-x-0' : 'w-0 lg:w-20 -translate-x-full lg:translate-x-0'}
         ${!sidebarOpen && 'lg:overflow-hidden'}
       `}>
-        <div className="p-6 flex items-center gap-4 shrink-0">
+        <div className="p-5 flex items-center gap-3 shrink-0">
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-200">
             <TrendingUp size={20} />
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
-              <h1 className="text-lg font-black text-slate-900 leading-none">SECURE SALES</h1>
-              <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">2026 Edition</span>
+              <h1 className="text-base font-black text-slate-900 leading-none uppercase">Secure Sales</h1>
+              <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">2026</span>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-hide mt-4">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-hide mt-2">
           {filteredMenuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 group active:scale-[0.98] ${
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group active:scale-[0.98] ${
                 currentView === item.id 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' 
+                ? 'bg-blue-600 text-white shadow-md' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
               }`}
             >
-              <item.icon size={20} className={currentView === item.id ? 'text-white' : 'group-hover:scale-110 transition-transform'} />
-              {sidebarOpen && <span className="font-bold text-sm">{item.label}</span>}
+              <item.icon size={18} className={currentView === item.id ? 'text-white' : 'group-hover:scale-110 transition-transform'} />
+              {sidebarOpen && <span className="font-bold text-xs uppercase tracking-wider">{item.label}</span>}
             </button>
           ))}
         </nav>
 
         <div className="p-4 mt-auto border-t border-slate-50">
-          <div className={`flex items-center gap-3 p-3 rounded-2xl bg-slate-50 ${!sidebarOpen && 'justify-center'}`}>
+          <div className={`flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 ${!sidebarOpen && 'justify-center'}`}>
             <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
                <ShieldCheck size={16} className="text-slate-600" />
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
-                <p className="text-xs font-bold truncate">{user.username}</p>
-                <p className="text-[9px] uppercase font-black text-slate-400 tracking-tighter">{user.role}</p>
+                <p className="text-[10px] font-black truncate uppercase text-slate-800">{user.username}</p>
+                <p className="text-[8px] uppercase font-black text-slate-400 tracking-tighter">{user.role}</p>
               </div>
             )}
           </div>
           <button 
             onClick={onLogout}
-            className={`w-full mt-2 flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-red-500 rounded-xl transition-colors ${!sidebarOpen && 'justify-center'}`}
+            className={`w-full mt-2 flex items-center gap-3 px-3 py-2.5 text-slate-400 hover:text-red-500 rounded-lg transition-colors ${!sidebarOpen && 'justify-center'}`}
           >
-            <LogOut size={18} />
-            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Salir</span>}
+            <LogOut size={16} />
+            {sidebarOpen && <span className="font-bold text-[10px] uppercase tracking-widest">Salir</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 lg:px-8 shrink-0">
+        <header className="h-14 lg:h-16 bg-white border-b border-slate-100 flex items-center justify-between px-3 lg:px-8 shrink-0">
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)} 
-            className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 lg:block"
+            className="p-2 hover:bg-slate-50 rounded-lg text-slate-500"
           >
-            {sidebarOpen && isMobile ? <X size={22} /> : <Menu size={22} />}
+            {sidebarOpen && isMobile ? <X size={20} /> : <Menu size={20} />}
           </button>
           
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block text-right">
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Sistema</p>
-              <p className="text-[11px] font-black text-emerald-500">EN LÍNEA</p>
-            </div>
-            <div className="w-px h-8 bg-slate-100 hidden sm:block" />
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs lg:text-sm font-black text-slate-900">
+              <p className="text-[10px] lg:text-xs font-black text-slate-900 leading-none">
                 {new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }).toUpperCase()}
               </p>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-10 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-3 lg:p-10 scrollbar-hide">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

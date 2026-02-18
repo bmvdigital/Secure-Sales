@@ -11,8 +11,7 @@ import {
   Plus,
   Package,
   User,
-  X,
-  CreditCard
+  X
 } from 'lucide-react';
 import { AppData, User as UserType, Role, Category, PaymentMethod, SaleItem, Sale } from '../types.ts';
 
@@ -103,55 +102,54 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-6 relative">
-      <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-3xl lg:text-4xl font-[900] text-slate-900 tracking-tight">VENTAS</h2>
-          <p className="text-slate-400 font-semibold mt-1 uppercase text-[10px] tracking-[0.2em]">Facturación Feria 2026</p>
+    <div className="h-full flex flex-col gap-4 relative">
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Terminal</h2>
+            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-widest mt-0.5">Venta Directa 2026</p>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-100 shadow-sm">
-            <Package size={16} className="text-blue-500" />
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-white px-3 py-2.5 rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
+            <Package size={14} className="text-blue-500 shrink-0" />
             <select 
               value={selectedWarehouseId} 
-              onChange={(e) => {
-                setSelectedWarehouseId(e.target.value);
-                setCart([]);
-              }}
-              className="bg-transparent font-bold text-xs focus:outline-none flex-1 truncate"
+              onChange={(e) => { setSelectedWarehouseId(e.target.value); setCart([]); }}
+              className="bg-transparent font-black text-[10px] uppercase focus:outline-none flex-1 truncate outline-none"
             >
               {data.warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
-          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-100 shadow-sm">
-            <User size={16} className="text-blue-500" />
+          <div className="bg-white px-3 py-2.5 rounded-xl border border-slate-100 shadow-sm flex items-center gap-2">
+            <User size={14} className="text-blue-500 shrink-0" />
             <select 
               value={selectedCustomerId} 
               onChange={(e) => setSelectedCustomerId(e.target.value)}
-              className="bg-transparent font-bold text-xs focus:outline-none flex-1 truncate"
+              className="bg-transparent font-black text-[10px] uppercase focus:outline-none flex-1 truncate outline-none"
             >
-              {data.customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {data.customers.map(c => <option key={c.id} value={c.id}>{c.tradeName}</option>)}
             </select>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
+      <div className="flex-1 flex gap-4 overflow-hidden min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <div className="relative mb-3">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
-              placeholder="Buscar productos..." 
+              placeholder="Producto..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-white pl-12 pr-4 py-4 rounded-2xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 transition-all font-semibold text-sm"
+              className="w-full bg-white pl-11 pr-4 py-3 rounded-xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 font-bold text-[11px] outline-none"
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 pb-20">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 pb-24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
               {filteredProducts.map(product => {
                 const inv = data.inventory.find(i => i.productId === product.id && i.warehouseId === selectedWarehouseId);
                 const isOutOfStock = !inv || inv.quantity <= 0;
@@ -161,23 +159,23 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
                     key={product.id}
                     disabled={isOutOfStock}
                     onClick={() => addToCart(product.id)}
-                    className={`bg-white p-5 rounded-[1.5rem] border border-slate-100 text-left transition-all duration-300 group ${
-                      isOutOfStock ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:shadow-lg active:scale-95'
+                    className={`bg-white p-3.5 rounded-2xl border border-slate-100 text-left transition-all group ${
+                      isOutOfStock ? 'opacity-40 grayscale cursor-not-allowed' : 'active:scale-95'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="px-2 py-0.5 bg-slate-50 text-[8px] font-black uppercase tracking-tighter text-slate-400 rounded">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="px-1.5 py-0.5 bg-slate-50 text-[7px] font-black uppercase tracking-tighter text-slate-400 rounded">
                         {product.category}
                       </span>
-                      <span className={`text-[10px] font-black ${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
-                        {inv?.quantity || 0} UNI
+                      <span className={`text-[9px] font-black ${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {inv?.quantity || 0} U.
                       </span>
                     </div>
-                    <h4 className="font-black text-slate-800 text-sm leading-tight mb-3 truncate">{product.name}</h4>
+                    <h4 className="font-black text-slate-800 text-[11px] leading-tight mb-2 truncate uppercase">{product.name}</h4>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="text-xl font-[900] text-blue-600">${product.salePrice.toLocaleString()}</span>
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        <Plus size={14} />
+                      <span className="text-base font-black text-blue-600">${product.salePrice.toLocaleString()}</span>
+                      <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white">
+                        <Plus size={12} />
                       </div>
                     </div>
                   </button>
@@ -187,40 +185,38 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
           </div>
         </div>
 
-        {/* Cart Container - Responsive Drawer / Sidebar */}
         <div className={`
-          fixed lg:static inset-y-0 right-0 z-50 w-full sm:w-[400px] lg:w-[380px]
-          bg-white lg:rounded-[2rem] lg:cyber-shadow flex flex-col overflow-hidden transition-transform duration-300
-          ${cartOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          fixed lg:static inset-y-0 right-0 z-50 w-full sm:w-[380px]
+          bg-white lg:rounded-[2rem] flex flex-col overflow-hidden transition-transform duration-300
+          ${cartOpen ? 'translate-x-0 shadow-2xl' : 'translate-x-full lg:translate-x-0'}
         `}>
-          <div className="p-6 bg-slate-900 text-white shrink-0 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <ShoppingCart size={20} className="text-blue-400" />
-              <h3 className="text-lg font-black tracking-tight">ORDEN ACTUAL</h3>
+          <div className="p-5 bg-slate-900 text-white shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingCart size={18} className="text-blue-400" />
+              <h3 className="text-sm font-black tracking-widest uppercase">Carrito</h3>
             </div>
-            <button onClick={() => setCartOpen(false)} className="lg:hidden text-slate-400"><X /></button>
+            <button onClick={() => setCartOpen(false)} className="lg:hidden text-slate-400 p-1"><X size={20}/></button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-3 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-50">
-                <ShoppingCart size={48} strokeWidth={1} />
-                <p className="font-bold text-center text-xs">CARRITO VACÍO</p>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-50">
+                <p className="font-black text-[10px] tracking-widest uppercase">Vacío</p>
               </div>
             ) : (
               cart.map(item => {
                 const product = data.products.find(p => p.id === item.productId);
                 return (
-                  <div key={item.productId} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div key={item.productId} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
                     <div className="flex-1 min-w-0 pr-2">
-                      <p className="text-xs font-black text-slate-800 truncate">{product?.name}</p>
-                      <p className="text-[10px] font-bold text-slate-400">${item.price} c/u</p>
+                      <p className="text-[10px] font-black text-slate-800 truncate uppercase">{product?.name}</p>
+                      <p className="text-[9px] font-bold text-slate-400">${item.price}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                       <button onClick={() => updateQuantity(item.productId, -1)} className="p-1 hover:text-blue-600"><Minus size={14}/></button>
-                       <span className="font-black text-xs w-4 text-center">{item.quantity}</span>
-                       <button onClick={() => updateQuantity(item.productId, 1)} className="p-1 hover:text-blue-600"><Plus size={14}/></button>
-                       <button onClick={() => removeFromCart(item.productId)} className="ml-2 p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={14}/></button>
+                    <div className="flex items-center gap-1.5">
+                       <button onClick={() => updateQuantity(item.productId, -1)} className="p-1 text-slate-400 hover:text-blue-600"><Minus size={12}/></button>
+                       <span className="font-black text-[11px] w-4 text-center">{item.quantity}</span>
+                       <button onClick={() => updateQuantity(item.productId, 1)} className="p-1 text-slate-400 hover:text-blue-600"><Plus size={12}/></button>
+                       <button onClick={() => removeFromCart(item.productId)} className="ml-1 p-1.5 text-rose-500 bg-rose-50 rounded-lg"><Trash2 size={12}/></button>
                     </div>
                   </div>
                 );
@@ -228,105 +224,50 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
             )}
           </div>
 
-          <div className="p-6 border-t border-slate-100 bg-white">
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <button 
-                onClick={() => setPaymentMethod(PaymentMethod.CONTADO)}
-                className={`py-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${paymentMethod === PaymentMethod.CONTADO ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
-              >
-                <span className="text-[10px] font-black uppercase">Contado</span>
-              </button>
-              <button 
-                onClick={() => setPaymentMethod(PaymentMethod.CONSIGNACION)}
-                className={`py-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${paymentMethod === PaymentMethod.CONSIGNACION ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
-              >
-                <span className="text-[10px] font-black uppercase">Crédito</span>
-              </button>
+          <div className="p-5 border-t border-slate-100 bg-white">
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button onClick={() => setPaymentMethod(PaymentMethod.CONTADO)} className={`py-2 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all ${paymentMethod === PaymentMethod.CONTADO ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-50 text-slate-400'}`}>Contado</button>
+              <button onClick={() => setPaymentMethod(PaymentMethod.CONSIGNACION)} className={`py-2 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all ${paymentMethod === PaymentMethod.CONSIGNACION ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-50 text-slate-400'}`}>Crédito</button>
             </div>
-
-            <div className="flex justify-between items-end mb-6">
-               <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Subtotal</span>
-               <span className="text-3xl font-[900] text-slate-900 tracking-tighter">${total.toLocaleString()}</span>
+            <div className="flex justify-between items-end mb-4">
+               <span className="text-slate-400 font-black uppercase text-[9px] tracking-widest">Total</span>
+               <span className="text-2xl font-black text-slate-900">${total.toLocaleString()}</span>
             </div>
-
-            <button 
-              onClick={handleCompleteSale}
-              disabled={cart.length === 0}
-              className="w-full py-5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-2xl font-black shadow-lg transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-widest"
-            >
-              PAGAR AHORA
-              <ChevronRight size={18} />
+            <button onClick={handleCompleteSale} disabled={cart.length === 0} className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 text-white rounded-xl font-black shadow-lg transition-all text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+              Pagar <ChevronRight size={16} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Floating Cart Button Mobile */}
       <button 
         onClick={() => setCartOpen(true)}
-        className="lg:hidden fixed bottom-6 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-40 transition-transform active:scale-90"
+        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-40 active:scale-90 transition-transform"
       >
         <div className="relative">
-          <ShoppingCart size={24} />
+          <ShoppingCart size={22} />
           {cart.length > 0 && (
-            <span className="absolute -top-3 -right-3 w-6 h-6 bg-rose-500 rounded-full border-2 border-white text-[10px] font-black flex items-center justify-center">
+            <span className="absolute -top-3 -right-3 w-5 h-5 bg-rose-500 rounded-full border-2 border-white text-[8px] font-black flex items-center justify-center">
               {cart.length}
             </span>
           )}
         </div>
       </button>
 
-      {/* Ticket Modal */}
       {showTicket && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="p-6 text-center space-y-3">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 size={32} />
-              </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase">Venta Registrada</h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ID: {showTicket.id}</p>
+          <div className="bg-white rounded-[1.5rem] w-full max-w-xs overflow-hidden">
+            <div className="p-5 text-center">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3"><CheckCircle2 size={24} /></div>
+              <h3 className="text-base font-black text-slate-900 uppercase">Éxito</h3>
             </div>
-            
-            <div className="px-6 py-4 border-y border-dashed border-slate-200 font-mono text-[11px] space-y-2">
-              <div className="flex justify-between">
-                <span>Cliente:</span>
-                <span className="font-bold truncate max-w-[150px]">{data.customers.find(c => c.id === showTicket.customerId)?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pago:</span>
-                <span className="font-bold">{showTicket.paymentMethod}</span>
-              </div>
-              <div className="mt-2 pt-2 border-t border-slate-100 max-h-32 overflow-y-auto pr-1">
-                {showTicket.items.map((item, idx) => {
-                  const p = data.products.find(prod => prod.id === item.productId);
-                  return (
-                    <div key={idx} className="flex justify-between mb-1">
-                      <span className="truncate flex-1 pr-2">{item.quantity}x {p?.name}</span>
-                      <span>${(item.quantity * item.price).toLocaleString()}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between pt-2 text-sm font-black text-slate-900">
-                <span>TOTAL:</span>
-                <span>${showTicket.total.toLocaleString()}</span>
-              </div>
+            <div className="px-5 py-3 border-y border-dashed border-slate-200 font-mono text-[10px] space-y-1">
+              <div className="flex justify-between"><span>Cliente:</span><span className="font-bold truncate max-w-[120px] uppercase">{data.customers.find(c => c.id === showTicket.customerId)?.tradeName}</span></div>
+              <div className="flex justify-between border-t border-slate-50 pt-1 mt-1 font-bold text-slate-900"><span>TOTAL:</span><span>${showTicket.total.toLocaleString()}</span></div>
             </div>
-
-            <div className="p-6 flex flex-col gap-3">
-              <button 
-                onClick={() => window.print()}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2"
-              >
-                <Printer size={14} /> IMPRIMIR RECIBO
-              </button>
-              <button 
-                onClick={() => setShowTicket(null)}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs uppercase tracking-widest"
-              >
-                Nueva Operación
-              </button>
+            <div className="p-5 flex flex-col gap-2">
+              <button onClick={() => window.print()} className="w-full py-2.5 bg-slate-100 rounded-lg font-bold text-[10px] flex items-center justify-center gap-2"><Printer size={12} /> IMPRIMIR</button>
+              <button onClick={() => setShowTicket(null)} className="w-full py-3 bg-blue-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest">NUEVA VENTA</button>
             </div>
           </div>
         </div>

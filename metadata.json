@@ -1,0 +1,7 @@
+{
+  "name": "Secure Sales",
+  "description": "An ultra-modern sales and distribution management system for ice and beverage distributors, featuring real-time inventory, multi-warehouse support, and advanced analytics.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

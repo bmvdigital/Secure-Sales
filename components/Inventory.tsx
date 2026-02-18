@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Package, Search, AlertTriangle, Plus, Minus, Filter, History } from 'lucide-react';
-import { AppData, User, Role, Category } from '../types';
+import { AppData, User, Role, Category } from '../types.ts';
 
 interface InventoryProps {
   data: AppData;
@@ -26,106 +26,105 @@ const Inventory: React.FC<InventoryProps> = ({ data, user, onAdjust }) => {
   }, [data, selectedWarehouseId, search, selectedCategory]);
 
   return (
-    <div className="space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-6 lg:space-y-10">
+      <div className="flex flex-col gap-4">
         <div>
-          <h2 className="text-4xl font-[900] text-slate-900 tracking-tight">INVENTARIO CENTRAL</h2>
-          <p className="text-slate-400 font-semibold mt-1 uppercase text-xs tracking-[0.2em]">Control de Stock y Kardex 2026</p>
+          <h2 className="text-3xl lg:text-4xl font-[900] text-slate-900 tracking-tight uppercase leading-none">Inventario</h2>
+          <p className="text-slate-400 font-bold mt-1 uppercase text-[10px] tracking-[0.2em]">Suministros Feria 2026</p>
         </div>
-        <div className="flex gap-4">
+        <div className="w-full">
            <select 
               value={selectedWarehouseId} 
               onChange={(e) => setSelectedWarehouseId(e.target.value)}
-              className="bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm font-bold text-sm focus:outline-none"
+              className="w-full bg-white px-5 py-4 rounded-xl border border-slate-100 shadow-sm font-bold text-xs focus:outline-none"
             >
               {data.warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input 
             type="text" 
-            placeholder="Buscar por producto..." 
+            placeholder="Filtrar stock..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white pl-16 pr-6 py-6 rounded-3xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all font-semibold"
+            className="w-full bg-white pl-12 pr-4 py-4 rounded-xl border border-slate-100 shadow-sm font-bold text-xs"
           />
         </div>
         <select 
           value={selectedCategory} 
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="bg-white px-6 py-4 rounded-3xl border border-slate-100 shadow-sm font-bold text-sm"
+          className="bg-white px-5 py-4 rounded-xl border border-slate-100 shadow-sm font-bold text-xs"
         >
-          <option value="All">Todas las Categorías</option>
+          <option value="All">Categorías</option>
           {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
         </select>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] cyber-shadow overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50">
-              <th className="px-8 py-6 text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Producto</th>
-              <th className="px-8 py-6 text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Categoría</th>
-              <th className="px-8 py-6 text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Stock Actual</th>
-              <th className="px-8 py-6 text-xs font-black uppercase text-slate-400 tracking-[0.2em]">Valorización</th>
-              {user.role === Role.MASTER && <th className="px-8 py-6 text-xs font-black uppercase text-slate-400 tracking-[0.2em] text-right">Ajuste Manual</th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {filtered.map(item => (
-              <tr key={item.productId} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-8 py-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
-                      <Package size={20} />
-                    </div>
-                    <span className="font-bold text-slate-800">{item.product.name}</span>
-                  </div>
-                </td>
-                <td className="px-8 py-6">
-                  <span className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    {item.product.category}
-                  </span>
-                </td>
-                <td className="px-8 py-6">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-lg font-[900] ${item.quantity < 50 ? 'text-rose-500' : 'text-slate-800'}`}>
-                      {item.quantity}
-                    </span>
-                    {item.quantity < 50 && <AlertTriangle size={16} className="text-rose-500" />}
-                  </div>
-                </td>
-                <td className="px-8 py-6">
-                  <span className="font-mono text-sm font-black text-slate-400">
-                    ${(item.quantity * item.product.acquisitionCost).toLocaleString()}
-                  </span>
-                </td>
-                {user.role === Role.MASTER && (
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => onAdjust(item.productId, selectedWarehouseId, -10)}
-                        className="p-2 hover:bg-rose-50 text-rose-500 rounded-lg transition-colors"
-                      >
-                        <Minus size={18} />
-                      </button>
-                      <button 
-                        onClick={() => onAdjust(item.productId, selectedWarehouseId, 10)}
-                        className="p-2 hover:bg-emerald-50 text-emerald-500 rounded-lg transition-colors"
-                      >
-                        <Plus size={18} />
-                      </button>
+      <div className="bg-white rounded-[1.5rem] lg:rounded-[2.5rem] cyber-shadow overflow-hidden border border-slate-50">
+        <div className="overflow-x-auto scrollbar-hide">
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr className="bg-slate-50">
+                <th className="px-6 py-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">Producto</th>
+                <th className="px-6 py-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">Stock</th>
+                <th className="px-6 py-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">Valor</th>
+                {user.role === Role.MASTER && <th className="px-6 py-4 text-[9px] font-black uppercase text-slate-400 tracking-widest text-right">Ajuste</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {filtered.map(item => (
+                <tr key={item.productId} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                        <Package size={14} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-800 text-xs truncate">{item.product.name}</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase">{item.product.category}</p>
+                      </div>
                     </div>
                   </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-black ${item.quantity < 50 ? 'text-rose-500' : 'text-slate-800'}`}>
+                        {item.quantity}
+                      </span>
+                      {item.quantity < 50 && <AlertTriangle size={12} className="text-rose-500" />}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="font-mono text-[10px] font-bold text-slate-400">
+                      ${(item.quantity * item.product.acquisitionCost).toLocaleString()}
+                    </span>
+                  </td>
+                  {user.role === Role.MASTER && (
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button 
+                          onClick={() => onAdjust(item.productId, selectedWarehouseId, -10)}
+                          className="p-1.5 hover:bg-rose-50 text-rose-500 rounded transition-colors"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <button 
+                          onClick={() => onAdjust(item.productId, selectedWarehouseId, 10)}
+                          className="p-1.5 hover:bg-emerald-50 text-emerald-500 rounded transition-colors"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

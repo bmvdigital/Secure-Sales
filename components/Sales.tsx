@@ -11,10 +11,10 @@ import {
   Plus,
   Package,
   User,
-  MapPin,
+  X,
   CreditCard
 } from 'lucide-react';
-import { AppData, User as UserType, Role, Category, PaymentMethod, SaleItem, Sale } from '../types';
+import { AppData, User as UserType, Role, Category, PaymentMethod, SaleItem, Sale } from '../types.ts';
 
 interface SalesProps {
   data: AppData;
@@ -29,6 +29,7 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [showTicket, setShowTicket] = useState<Sale | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const filteredProducts = useMemo(() => {
     return data.products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -41,10 +42,9 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
     
     if (!product || !inventory) return;
     
-    // Check stock
     const currentQtyInCart = existing?.quantity || 0;
     if (currentQtyInCart + 1 > inventory.quantity) {
-      alert('Sin stock suficiente en este almacén');
+      alert('Sin stock suficiente');
       return;
     }
 
@@ -81,7 +81,7 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
   const handleCompleteSale = () => {
     if (cart.length === 0) return;
     if (user.role === Role.ADMIN) {
-      alert('Los administradores solo pueden ver (Modo Lectura)');
+      alert('Modo Lectura');
       return;
     }
 
@@ -99,36 +99,37 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
     onAddSale(newSale);
     setShowTicket(newSale);
     setCart([]);
+    setCartOpen(false);
   };
 
   return (
-    <div className="h-full flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="h-full flex flex-col gap-6 relative">
+      <div className="flex flex-col gap-6">
         <div>
-          <h2 className="text-4xl font-[900] text-slate-900 tracking-tight">TERMINAL DE VENTAS</h2>
-          <p className="text-slate-400 font-semibold mt-1 uppercase text-xs tracking-[0.2em]">Facturación y Despacho 2026</p>
+          <h2 className="text-3xl lg:text-4xl font-[900] text-slate-900 tracking-tight">VENTAS</h2>
+          <p className="text-slate-400 font-semibold mt-1 uppercase text-[10px] tracking-[0.2em]">Facturación Feria 2026</p>
         </div>
         
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm">
-            <Package size={18} className="text-blue-500" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-100 shadow-sm">
+            <Package size={16} className="text-blue-500" />
             <select 
               value={selectedWarehouseId} 
               onChange={(e) => {
                 setSelectedWarehouseId(e.target.value);
-                setCart([]); // Clear cart if warehouse changes to avoid stock inconsistencies
+                setCart([]);
               }}
-              className="bg-transparent font-bold text-sm focus:outline-none"
+              className="bg-transparent font-bold text-xs focus:outline-none flex-1 truncate"
             >
               {data.warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
-          <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-slate-100 shadow-sm">
-            <User size={18} className="text-blue-500" />
+          <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-100 shadow-sm">
+            <User size={16} className="text-blue-500" />
             <select 
               value={selectedCustomerId} 
               onChange={(e) => setSelectedCustomerId(e.target.value)}
-              className="bg-transparent font-bold text-sm focus:outline-none"
+              className="bg-transparent font-bold text-xs focus:outline-none flex-1 truncate"
             >
               {data.customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -136,22 +137,21 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
         </div>
       </div>
 
-      <div className="flex-1 flex gap-10 overflow-hidden min-h-0">
-        {/* Products Grid */}
+      <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="relative mb-6">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+          <div className="relative mb-4">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Buscar productos por nombre o categoría..." 
+              placeholder="Buscar productos..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-white pl-16 pr-6 py-6 rounded-3xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all font-semibold"
+              className="w-full bg-white pl-12 pr-4 py-4 rounded-2xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-blue-100 transition-all font-semibold text-sm"
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto scrollbar-hide pr-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-6">
+          <div className="flex-1 overflow-y-auto scrollbar-hide pr-1 pb-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredProducts.map(product => {
                 const inv = data.inventory.find(i => i.productId === product.id && i.warehouseId === selectedWarehouseId);
                 const isOutOfStock = !inv || inv.quantity <= 0;
@@ -161,23 +161,23 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
                     key={product.id}
                     disabled={isOutOfStock}
                     onClick={() => addToCart(product.id)}
-                    className={`bg-white p-6 rounded-[2rem] border border-slate-100 text-left transition-all duration-300 group ${
-                      isOutOfStock ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:shadow-xl hover:shadow-blue-50 hover:-translate-y-1 active:scale-95'
+                    className={`bg-white p-5 rounded-[1.5rem] border border-slate-100 text-left transition-all duration-300 group ${
+                      isOutOfStock ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:shadow-lg active:scale-95'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="px-3 py-1 bg-slate-50 text-[10px] font-black uppercase tracking-tighter text-slate-400 rounded-lg">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="px-2 py-0.5 bg-slate-50 text-[8px] font-black uppercase tracking-tighter text-slate-400 rounded">
                         {product.category}
                       </span>
-                      <span className={`text-xs font-black ${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
-                        STOCK: {inv?.quantity || 0}
+                      <span className={`text-[10px] font-black ${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {inv?.quantity || 0} UNI
                       </span>
                     </div>
-                    <h4 className="font-black text-slate-800 text-lg leading-tight mb-4">{product.name}</h4>
+                    <h4 className="font-black text-slate-800 text-sm leading-tight mb-3 truncate">{product.name}</h4>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="text-2xl font-[900] text-blue-600">${product.salePrice.toLocaleString()}</span>
-                      <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        <Plus size={18} />
+                      <span className="text-xl font-[900] text-blue-600">${product.salePrice.toLocaleString()}</span>
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <Plus size={14} />
                       </div>
                     </div>
                   </button>
@@ -187,38 +187,40 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
           </div>
         </div>
 
-        {/* Cart / Checkout Sidebar */}
-        <div className="w-[450px] bg-white rounded-[2.5rem] cyber-shadow flex flex-col overflow-hidden">
-          <div className="p-8 bg-slate-900 text-white shrink-0">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <ShoppingCart className="text-blue-400" />
-                <h3 className="text-xl font-black">CARRITO</h3>
-              </div>
-              <span className="bg-blue-500 px-3 py-1 rounded-full text-xs font-black">{cart.length} ITEMS</span>
+        {/* Cart Container - Responsive Drawer / Sidebar */}
+        <div className={`
+          fixed lg:static inset-y-0 right-0 z-50 w-full sm:w-[400px] lg:w-[380px]
+          bg-white lg:rounded-[2rem] lg:cyber-shadow flex flex-col overflow-hidden transition-transform duration-300
+          ${cartOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+        `}>
+          <div className="p-6 bg-slate-900 text-white shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ShoppingCart size={20} className="text-blue-400" />
+              <h3 className="text-lg font-black tracking-tight">ORDEN ACTUAL</h3>
             </div>
+            <button onClick={() => setCartOpen(false)} className="lg:hidden text-slate-400"><X /></button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-6 space-y-3 scrollbar-hide">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
-                <ShoppingCart size={64} strokeWidth={1} />
-                <p className="font-bold text-center">El carrito está vacío.<br/>Seleccione productos para comenzar.</p>
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4 opacity-50">
+                <ShoppingCart size={48} strokeWidth={1} />
+                <p className="font-bold text-center text-xs">CARRITO VACÍO</p>
               </div>
             ) : (
               cart.map(item => {
                 const product = data.products.find(p => p.id === item.productId);
                 return (
-                  <div key={item.productId} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                    <div className="flex-1">
-                      <p className="text-sm font-black text-slate-800">{product?.name}</p>
-                      <p className="text-xs font-bold text-slate-400">${item.price} x {item.quantity}</p>
+                  <div key={item.productId} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex-1 min-w-0 pr-2">
+                      <p className="text-xs font-black text-slate-800 truncate">{product?.name}</p>
+                      <p className="text-[10px] font-bold text-slate-400">${item.price} c/u</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                       <button onClick={() => updateQuantity(item.productId, -1)} className="p-1 hover:text-blue-600"><Minus size={16}/></button>
-                       <span className="font-black text-sm w-4 text-center">{item.quantity}</span>
-                       <button onClick={() => updateQuantity(item.productId, 1)} className="p-1 hover:text-blue-600"><Plus size={16}/></button>
-                       <button onClick={() => removeFromCart(item.productId)} className="ml-4 p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={16}/></button>
+                    <div className="flex items-center gap-2">
+                       <button onClick={() => updateQuantity(item.productId, -1)} className="p-1 hover:text-blue-600"><Minus size={14}/></button>
+                       <span className="font-black text-xs w-4 text-center">{item.quantity}</span>
+                       <button onClick={() => updateQuantity(item.productId, 1)} className="p-1 hover:text-blue-600"><Plus size={14}/></button>
+                       <button onClick={() => removeFromCart(item.productId)} className="ml-2 p-2 text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={14}/></button>
                     </div>
                   </div>
                 );
@@ -226,91 +228,104 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
             )}
           </div>
 
-          <div className="p-8 border-t border-slate-100 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-6 border-t border-slate-100 bg-white">
+            <div className="grid grid-cols-2 gap-3 mb-6">
               <button 
                 onClick={() => setPaymentMethod(PaymentMethod.CONTADO)}
-                className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === PaymentMethod.CONTADO ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
+                className={`py-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${paymentMethod === PaymentMethod.CONTADO ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
               >
-                <DollarSign size={20} />
-                <span className="text-xs font-black uppercase">Contado</span>
+                <span className="text-[10px] font-black uppercase">Contado</span>
               </button>
               <button 
                 onClick={() => setPaymentMethod(PaymentMethod.CONSIGNACION)}
-                className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === PaymentMethod.CONSIGNACION ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
+                className={`py-3 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${paymentMethod === PaymentMethod.CONSIGNACION ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'}`}
               >
-                <CreditCard size={20} />
-                <span className="text-xs font-black uppercase">Crédito</span>
+                <span className="text-[10px] font-black uppercase">Crédito</span>
               </button>
             </div>
 
-            <div className="flex justify-between items-end">
-               <span className="text-slate-400 font-bold uppercase text-xs tracking-widest">Total a pagar</span>
-               <span className="text-4xl font-[900] text-slate-900">${total.toLocaleString()}</span>
+            <div className="flex justify-between items-end mb-6">
+               <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Subtotal</span>
+               <span className="text-3xl font-[900] text-slate-900 tracking-tighter">${total.toLocaleString()}</span>
             </div>
 
             <button 
               onClick={handleCompleteSale}
               disabled={cart.length === 0}
-              className="w-full py-6 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-[1.5rem] font-black shadow-xl shadow-blue-200 transition-all flex items-center justify-center gap-4 group"
+              className="w-full py-5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-2xl font-black shadow-lg transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-widest"
             >
-              FINALIZAR VENTA
-              <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+              PAGAR AHORA
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
       </div>
 
+      {/* Floating Cart Button Mobile */}
+      <button 
+        onClick={() => setCartOpen(true)}
+        className="lg:hidden fixed bottom-6 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center z-40 transition-transform active:scale-90"
+      >
+        <div className="relative">
+          <ShoppingCart size={24} />
+          {cart.length > 0 && (
+            <span className="absolute -top-3 -right-3 w-6 h-6 bg-rose-500 rounded-full border-2 border-white text-[10px] font-black flex items-center justify-center">
+              {cart.length}
+            </span>
+          )}
+        </div>
+      </button>
+
       {/* Ticket Modal */}
       {showTicket && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="p-8 text-center space-y-4">
-              <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 size={48} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="p-6 text-center space-y-3">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 size={32} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900">Venta Exitosa</h3>
-              <p className="text-slate-400 font-medium">Folio: {showTicket.id}</p>
+              <h3 className="text-xl font-black text-slate-900 uppercase">Venta Registrada</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ID: {showTicket.id}</p>
             </div>
             
-            <div className="px-8 py-4 border-y border-dashed border-slate-200 font-mono text-sm space-y-2">
+            <div className="px-6 py-4 border-y border-dashed border-slate-200 font-mono text-[11px] space-y-2">
               <div className="flex justify-between">
                 <span>Cliente:</span>
-                <span className="font-bold">{data.customers.find(c => c.id === showTicket.customerId)?.name}</span>
+                <span className="font-bold truncate max-w-[150px]">{data.customers.find(c => c.id === showTicket.customerId)?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span>Método:</span>
+                <span>Pago:</span>
                 <span className="font-bold">{showTicket.paymentMethod}</span>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-100">
+              <div className="mt-2 pt-2 border-t border-slate-100 max-h-32 overflow-y-auto pr-1">
                 {showTicket.items.map((item, idx) => {
                   const p = data.products.find(prod => prod.id === item.productId);
                   return (
-                    <div key={idx} className="flex justify-between">
-                      <span>{item.quantity}x {p?.name.slice(0, 20)}...</span>
+                    <div key={idx} className="flex justify-between mb-1">
+                      <span className="truncate flex-1 pr-2">{item.quantity}x {p?.name}</span>
                       <span>${(item.quantity * item.price).toLocaleString()}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex justify-between pt-4 text-lg font-black">
+              <div className="flex justify-between pt-2 text-sm font-black text-slate-900">
                 <span>TOTAL:</span>
                 <span>${showTicket.total.toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="p-8 flex gap-4">
+            <div className="p-6 flex flex-col gap-3">
               <button 
                 onClick={() => window.print()}
-                className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 rounded-2xl font-bold flex items-center justify-center gap-2"
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2"
               >
-                <Printer size={18} /> Imprimir
+                <Printer size={14} /> IMPRIMIR RECIBO
               </button>
               <button 
                 onClick={() => setShowTicket(null)}
-                className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black"
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs uppercase tracking-widest"
               >
-                Nueva Venta
+                Nueva Operación
               </button>
             </div>
           </div>
@@ -319,12 +334,5 @@ const Sales: React.FC<SalesProps> = ({ data, user, onAddSale }) => {
     </div>
   );
 };
-
-const DollarSign = ({ size, className }: any) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <line x1="12" y1="1" x2="12" y2="23"></line>
-    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-  </svg>
-);
 
 export default Sales;

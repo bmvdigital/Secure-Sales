@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -14,7 +14,7 @@ import {
   TrendingUp,
   History
 } from 'lucide-react';
-import { Role, User } from '../types';
+import { Role, User } from '../types.ts';
 
 interface LayoutProps {
   user: User;
@@ -26,11 +26,23 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ user, onLogout, currentView, setView, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) setSidebarOpen(false);
+      else setSidebarOpen(true);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR, Role.PROMOTOR] },
-    { id: 'sales', label: 'Terminal Ventas', icon: ShoppingCart, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR] },
-    { id: 'orders', label: 'Pedidos / Preventa', icon: ClipboardList, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR, Role.PROMOTOR] },
+    { id: 'sales', label: 'Ventas', icon: ShoppingCart, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR] },
+    { id: 'orders', label: 'Pedidos', icon: ClipboardList, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR, Role.PROMOTOR] },
     { id: 'inventory', label: 'Inventario', icon: Package, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR] },
     { id: 'customers', label: 'Clientes', icon: Users, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR, Role.PROMOTOR] },
     { id: 'logistics', label: 'Logística', icon: Truck, roles: [Role.MASTER, Role.ADMIN, Role.OPERATOR] },
@@ -39,82 +51,107 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, currentView, setView, c
 
   const filteredMenuItems = menuItems.filter(item => item.roles.includes(user.role));
 
+  const handleNavClick = (id: string) => {
+    setView(id);
+    if (isMobile) setSidebarOpen(false);
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 overflow-hidden relative">
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`bg-white border-r border-slate-100 transition-all duration-300 ease-in-out flex flex-col z-20 ${sidebarOpen ? 'w-80' : 'w-20'}`}>
-        <div className="p-8 flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-200">
-            <TrendingUp size={24} />
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-40
+        bg-white border-r border-slate-100 transition-all duration-300 ease-in-out flex flex-col
+        ${sidebarOpen ? 'w-72 translate-x-0' : 'w-0 lg:w-20 -translate-x-full lg:translate-x-0'}
+        ${!sidebarOpen && 'lg:overflow-hidden'}
+      `}>
+        <div className="p-6 flex items-center gap-4 shrink-0">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-200">
+            <TrendingUp size={20} />
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
-              <h1 className="text-xl font-black text-slate-900 leading-none">SECURE SALES</h1>
-              <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">2026 Edition</span>
+              <h1 className="text-lg font-black text-slate-900 leading-none">SECURE SALES</h1>
+              <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">2026 Edition</span>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto scrollbar-hide mt-4">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto scrollbar-hide mt-4">
           {filteredMenuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setView(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-4 rounded-[1.5rem] transition-all duration-200 group active:scale-[0.98] ${
+              onClick={() => handleNavClick(item.id)}
+              className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 group active:scale-[0.98] ${
                 currentView === item.id 
-                ? 'bg-blue-600 text-white shadow-xl shadow-blue-100' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' 
                 : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
               }`}
             >
-              <item.icon size={22} className={currentView === item.id ? 'text-white' : 'group-hover:scale-110 transition-transform'} />
-              {sidebarOpen && <span className="font-semibold text-sm">{item.label}</span>}
+              <item.icon size={20} className={currentView === item.id ? 'text-white' : 'group-hover:scale-110 transition-transform'} />
+              {sidebarOpen && <span className="font-bold text-sm">{item.label}</span>}
             </button>
           ))}
         </nav>
 
-        <div className="p-6 mt-auto border-t border-slate-50">
-          <div className={`flex items-center gap-4 p-4 rounded-[1.5rem] bg-slate-50 ${!sidebarOpen && 'justify-center'}`}>
-            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-               <ShieldCheck size={20} className="text-slate-600" />
+        <div className="p-4 mt-auto border-t border-slate-50">
+          <div className={`flex items-center gap-3 p-3 rounded-2xl bg-slate-50 ${!sidebarOpen && 'justify-center'}`}>
+            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+               <ShieldCheck size={16} className="text-slate-600" />
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
-                <p className="text-sm font-bold truncate">{user.username}</p>
-                <p className="text-[10px] uppercase font-black text-slate-400 tracking-tighter">{user.role}</p>
+                <p className="text-xs font-bold truncate">{user.username}</p>
+                <p className="text-[9px] uppercase font-black text-slate-400 tracking-tighter">{user.role}</p>
               </div>
             )}
           </div>
           <button 
             onClick={onLogout}
-            className={`w-full mt-4 flex items-center gap-4 px-4 py-4 text-slate-400 hover:text-red-500 rounded-[1.5rem] transition-colors ${!sidebarOpen && 'justify-center'}`}
+            className={`w-full mt-2 flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-red-500 rounded-xl transition-colors ${!sidebarOpen && 'justify-center'}`}
           >
-            <LogOut size={20} />
-            {sidebarOpen && <span className="font-semibold text-sm">Cerrar Sesión</span>}
+            <LogOut size={18} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Salir</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-10 shrink-0">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-50 rounded-xl text-slate-500">
-            <Menu size={24} />
+        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 lg:px-8 shrink-0">
+          <button 
+            onClick={() => setSidebarOpen(!sidebarOpen)} 
+            className="p-2 hover:bg-slate-50 rounded-xl text-slate-500 lg:block"
+          >
+            {sidebarOpen && isMobile ? <X size={22} /> : <Menu size={22} />}
           </button>
           
-          <div className="flex items-center gap-6">
-            <div className="hidden md:block text-right">
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Estado Sistema</p>
-              <p className="text-sm font-black text-emerald-500">ONLINE • MODO PRODUCCIÓN</p>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:block text-right">
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Sistema</p>
+              <p className="text-[11px] font-black text-emerald-500">EN LÍNEA</p>
             </div>
-            <div className="w-px h-10 bg-slate-100 hidden md:block" />
+            <div className="w-px h-8 bg-slate-100 hidden sm:block" />
             <div className="text-right">
-              <p className="text-sm font-black text-slate-900">{new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+              <p className="text-xs lg:text-sm font-black text-slate-900">
+                {new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }).toUpperCase()}
+              </p>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10 scrollbar-hide">
-          {children}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-10 scrollbar-hide">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </div>
       </main>
     </div>
